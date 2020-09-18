@@ -14,7 +14,7 @@ cap = cv.VideoCapture(0)
 
 counter = 0
 
-class Camera:
+class Camera(PiCamera):
 	def __init__(self,
 				  shutter_speed:int,
 				   framerate:int,
@@ -24,25 +24,23 @@ class Camera:
 					    sharpness: int,
 						 contrast: int,
 						  brightness: int ):
-		self = Picamera()
-		self.shutter_speed = shutter_speed #скорость затвора 
-		self.framerate = framerate #fps
-		self.exposure_mode = exposure_mode #экспозиция 
-		self.iso = iso #баланс белого
-		self.saturation = saturation #насыщенность
-		self.sharpness = sharpness #резкость
-		self.contrast = contrast #контраст
-		self.brightness = brightness #яркость
+		self.camera = PiCamera()
+		self.camera.shutter_speed = shutter_speed #скорость затвора 
+		self.camera.framerate = framerate #fps
+		self.camera.exposure_mode = exposure_mode #экспозиция 
+		self.camera.iso = iso #баланс белого
+		self.camera.saturation = saturation #насыщенность
+		self.camera.sharpness = sharpness #резкость
+		self.camera.contrast = contrast #контраст
+		self.camera.brightness = brightness #яркость
+		self.rawCapture = PiRGBArray(self.camera)
+		self.stream = self.capture_continuous(self.rawCapture,
+											 format = "bgr",
+											  use_video_port = True):
+		self.frame = None
+		self.stopped = False
 
-	def capture(self) -> object:
-		return PiRGBarray(self)	
-
-	def  Main(self):
-		for frame in self.capture_continious(capture(self), "bgr", use_video_port = True):
-			return frame.array
-
-
-camera = Camera(camera, 10000000, 30, 'night', 100,-100,-100,100,10)
+camera = Camera(10000000, 30, 'night', 100,-100,-100,100,10)
 
 def reworking(img):
 	
@@ -53,20 +51,15 @@ def reworking(img):
 	
 	return last
 
+def taking_photo(img):
+	pass
 """
-
 	Основные идеи:
-
 		подклюить гугловский апи
-
 		искать фото в гугле
-
 		взять первые 10 фото
-
 		сравнить схожесть с пооью ИИ или же BFmatcher, но только если бюудет работать,
-
 		да и надо будет как то подклюить интернет к коробоке
-
 	"""
 
 remake_to_np_ms = lambda x: np.around(np.divide(x,50.0), decimals = 1)
@@ -144,9 +137,3 @@ while True:
 	if k%256 == 27:
 
 	 break
-
-"""
-
-позднее добавить функции аналиха фотографий, в пларне, нужные - оставить, (полезные)
-
-нужные же отпралять на аналих"""
