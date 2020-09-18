@@ -68,72 +68,72 @@ camera.resolution = (640,320)
 raw = PiRGBArray(camera, size = camera.resolution)
 
 
-	while True:
-		for frame in camera.capture_continuous(raw,format='bgr', use_video_port = True):
-			img1 = frame.array
-			cv.imshow('rand',img1)
-			image = reworking(img1)
-			if counter == 0:
-				img_matrix = []
-				img_matrix.append(image)
-			elif counter % 1 == 0:
-				if len(img_matrix) == 1:
-					img_matrix.append(image)
-				else:
-					img_matrix[0] = img_matrix[-1]
-					img_matrix[-1] = (image)
-				
-				diff = img_matrix[-1]-img_matrix[0]
-				diff[diff<0] = 0
-				
-				cv.imshow('a',img_matrix[0])
-				cv.imshow('b',img_matrix[-1])
-				cv.imshow('c',diff)	 	
-			#starting photo analys
-			#res  = photo_analysis(img1)
+while True:
+    for frame in camera.capture_continuous(raw,format='bgr', use_video_port = True):
+        img1 = frame.array
+        cv.imshow('rand',img1)
+        image = reworking(img1)
+        if counter == 0:
+            img_matrix = []
+            img_matrix.append(image)
+        elif counter % 1 == 0:
+            if len(img_matrix) == 1:
+                img_matrix.append(image)
+            else:
+                img_matrix[0] = img_matrix[-1]
+                img_matrix[-1] = (image)
 
-				res = 1
+            diff = img_matrix[-1]-img_matrix[0]
+            diff[diff<0] = 0
 
-				if res  == 1:
+            cv.imshow('a',img_matrix[0])
+            cv.imshow('b',img_matrix[-1])
+            cv.imshow('c',diff)	 	
+        #starting photo analys
+        #res  = photo_analysis(img1)
 
-					
-					# working with an image
-					# creating numpy masssive which takes information from blurreds
+            res = 1
 
-					pixels1 = np.around(np.divide(diff, 0.5), decimals = 1)
-					# modifying the image
-					def draw():
-						low_white = np.array(2,np.uint8) #for rasberry use 4
+            if res  == 1:
 
-						max_white = np.array(10,np.uint8)
 
-						mask = cv.inRange(pixels1,(low_white), (max_white))	
+                # working with an image
+                # creating numpy masssive which takes information from blurreds
 
-						cv.imshow('main1', mask)
+                pixels1 = np.around(np.divide(diff, 0.5), decimals = 1)
+                # modifying the image
+                def draw():
+                    low_white = np.array(2,np.uint8) #for rasberry use 4
 
-						cnts,hierarchy = cv.findContours(mask.copy(), cv.RETR_EXTERNAL,
+                    max_white = np.array(10,np.uint8)
 
-							cv.CHAIN_APPROX_SIMPLE)	
+                    mask = cv.inRange(pixels1,(low_white), (max_white))	
 
-						#cv.drawContours(img1,cnts,-1,(255,0,0),3,cv.LINE_AA,hierarchy,1)
-						try:
-							for el in range(len(cnts)):
-								if cv.contourArea(cnts[el]) > 300:
-									cv.drawContours(img1,cnts,el,(255,0,0),3,cv.LINE_AA,hierarchy,1)
-						except IndexError:
-							pass
-					draw()
-					cv.imshow('cntr',img1)
-					cv.imshow('countrs', image)
-					
+                    cv.imshow('main1', mask)
 
-			
-			raw.truncate(0)
-			counter = 1
-			time.sleep(0.1)
+                    cnts,hierarchy = cv.findContours(mask.copy(), cv.RETR_EXTERNAL,
 
-			k = cv.waitKey(1)
+                        cv.CHAIN_APPROX_SIMPLE)	
 
-			if k%256 == 27:
+                    #cv.drawContours(img1,cnts,-1,(255,0,0),3,cv.LINE_AA,hierarchy,1)
+                    try:
+                        for el in range(len(cnts)):
+                            if cv.contourArea(cnts[el]) > 300:
+                                cv.drawContours(img1,cnts,el,(255,0,0),3,cv.LINE_AA,hierarchy,1)
+                    except IndexError:
+                        pass
+                draw()
+                cv.imshow('cntr',img1)
+                cv.imshow('countrs', image)
 
-				break
+
+
+        raw.truncate(0)
+        counter = 1
+        time.sleep(0.1)
+
+        k = cv.waitKey(1)
+
+        if k%256 == 27:
+
+            break
