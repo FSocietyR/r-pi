@@ -2,6 +2,7 @@ import cv2 as cv
 import numpy as np
 import time
 import imutils
+import io
 from time import sleep
 import picamera as pi
 from picamera.array import PiRGBArray
@@ -24,21 +25,25 @@ class Camera(PiCamera):
 					    sharpness: int,
 						 contrast: int,
 						  brightness: int ):
-		self.camera = PiCamera()
-		self.camera.shutter_speed = shutter_speed #скорость затвора 
-		self.camera.framerate = framerate #fps
-		self.camera.exposure_mode = exposure_mode #экспозиция 
-		self.camera.iso = iso #баланс белого
-		self.camera.saturation = saturation #насыщенность
-		self.camera.sharpness = sharpness #резкость
-		self.camera.contrast = contrast #контраст
-		self.camera.brightness = brightness #яркость
-		self.rawCapture = PiRGBArray(self.camera)
-		self.stream = self.capture_continuous(self.rawCapture,
-											 format = "bgr",
-											  use_video_port = True):
-		self.frame = None
-		self.stopped = False
+		self = PiCamera()
+		self.shutter_speed = shutter_speed #скорость затвора 
+		self.framerate = framerate #fps
+		self.exposure_mode = exposure_mode #экспозиция 
+		self.iso = iso #баланс белого
+		self.saturation = saturation #насыщенность
+		self.sharpness = sharpness #резкость
+		self.contrast = contrast #контраст
+		self.brightness = brightness #яркость 
+		self.resolution = (640,480)
+		
+	def stream(self):
+		self.start_preview()
+		time.sleep(2)
+		with PiRGBArray(self) as stream:
+			self.capture(stream,
+								format = "bgr", use_video_port=True)
+		image = stream.array
+		cv.imshow("test",image)						
 
 camera = Camera(10000000, 30, 'night', 100,-100,-100,100,10)
 
@@ -65,8 +70,9 @@ def taking_photo(img):
 remake_to_np_ms = lambda x: np.around(np.divide(x,50.0), decimals = 1)
 
 while True:
-
-	img1 = Camera.Main(camera)
+	Camera.stream(camera)
+	"""img1 = Camera.stream(camera)
+	cv.imshow('rand',camera)
 	image = reworking(img1)
 	if counter == 0:
 		img_matrix = []
@@ -119,7 +125,7 @@ while True:
 					pass
 			draw()
 			cv.imshow('cntr',img1)
-			cv.imshow('countrs', image)
+			cv.imshow('countrs', image)"""
 			
 
 	
