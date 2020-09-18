@@ -2,7 +2,10 @@ import cv2 as cv
 import numpy as np
 import time
 import imutils
-
+from time import sleep
+import picamera as pi
+from picamera.array import PiRGBArray
+from picamera import PiCamera
 	#creating window	
 window = cv.namedWindow("countrs")
 	# creating videocapture from main camera
@@ -10,6 +13,36 @@ window = cv.namedWindow("countrs")
 cap = cv.VideoCapture(0)
 
 counter = 0
+
+class Camera:
+	def __init__(self,
+				  shutter_speed:int,
+				   framerate:int,
+				     exposure_mode:str,
+					  iso: int,
+					   saturation: int,
+					    sharpness: int,
+						 contrast: int,
+						  brightness: int ):
+		self = Picamera()
+		self.shutter_speed = shutter_speed #скорость затвора 
+		self.framerate = framerate #fps
+		self.exposure_mode = exposure_mode #экспозиция 
+		self.iso = iso #баланс белого
+		self.saturation = saturation #насыщенность
+		self.sharpness = sharpness #резкость
+		self.contrast = contrast #контраст
+		self.brightness = brightness #яркость
+
+	def capture(self) -> object:
+		return PiRGBarray(self)	
+
+	def  Main(self):
+		for frame in self.capture_continious(capture(self), "bgr", use_video_port = True):
+			return frame.array
+
+
+camera = Camera(camera, 10000000, 30, 'night', 100,-100,-100,100,10)
 
 def reworking(img):
 	
@@ -40,7 +73,7 @@ remake_to_np_ms = lambda x: np.around(np.divide(x,50.0), decimals = 1)
 
 while True:
 
-	ret,img1 = cap.read() #takes photo from video
+	img1 = Camera.Main(camera)
 	image = reworking(img1)
 	if counter == 0:
 		img_matrix = []
@@ -96,10 +129,10 @@ while True:
 			cv.imshow('countrs', image)
 			
 
-		
+	
 
-	counter += 1
-
+	counter = 1
+	time.sleep(0.1)
 				
 
 	if  not ret:
