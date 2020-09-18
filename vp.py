@@ -7,6 +7,7 @@ from time import sleep
 import picamera as pi
 from picamera.array import PiRGBArray
 from picamera import PiCamera
+from picamera import *
 	#creating window	
 window = cv.namedWindow("countrs")
 	# creating videocapture from main camera
@@ -15,7 +16,7 @@ cap = cv.VideoCapture(0)
 
 counter = 0
 
-class Camera(pi):
+"""class Camera(pi):
 	def __init__(self,
 				  shutter_speed:int,
 				   framerate:int,
@@ -35,10 +36,10 @@ class Camera(pi):
 		self.contrast = contrast #контраст
 		self.brightness = brightness #яркость 
 
-    def rawRGB(self):
-        return PiRGBArray(self, size = self.resolution)    					
+	def rawRGB(self):
+		return PiRGBArray(self, size = self.resolution)"""    					
 
-camera = Camera(10000000, 30, 'night', 100,-100,-100,100,10)
+#camera = Camera(10000000, 30, 'night', 100,-100,-100,100,10)
 
 def reworking(img):
 	
@@ -62,79 +63,77 @@ def taking_photo(img):
 
 remake_to_np_ms = lambda x: np.around(np.divide(x,50.0), decimals = 1)
 
-for frame in camera.capture_continuous(Camera.rawRGB(camera),format='bgr', use_video_port = True):
+camera = PiCamera()
+camera.resolution = (640,320)
+raw = PiRGBArray(camera, size = camera.resolution)
+
 
 	while True:
-		
-		img1 = frame.array
-		cv.imshow('rand',camera)
-		image = reworking(img1)
-		if counter == 0:
-			img_matrix = []
-			img_matrix.append(image)
-		elif counter % 1 == 0:
-			if len(img_matrix) == 1:
+		for frame in camera.capture_continuous(raw,format='bgr', use_video_port = True):
+			img1 = frame.array
+			cv.imshow('rand',img1)
+			image = reworking(img1)
+			if counter == 0:
+				img_matrix = []
 				img_matrix.append(image)
-			else:
-				img_matrix[0] = img_matrix[-1]
-				img_matrix[-1] = (image)
-			
-			diff = img_matrix[-1]-img_matrix[0]
-			diff[diff<0] = 0
-			
-			cv.imshow('a',img_matrix[0])
-			cv.imshow('b',img_matrix[-1])
-			cv.imshow('c',diff)	 	
-		#starting photo analys
-		#res  = photo_analysis(img1)
-
-			res = 1
-
-			if res  == 1:
-
+			elif counter % 1 == 0:
+				if len(img_matrix) == 1:
+					img_matrix.append(image)
+				else:
+					img_matrix[0] = img_matrix[-1]
+					img_matrix[-1] = (image)
 				
-				# working with an image
-				# creating numpy masssive which takes information from blurreds
-
-				pixels1 = np.around(np.divide(diff, 0.5), decimals = 1)
-				# modifying the image
-				def draw():
-					low_white = np.array(2,np.uint8) #for rasberry use 4
-
-					max_white = np.array(10,np.uint8)
-
-					mask = cv.inRange(pixels1,(low_white), (max_white))	
-
-					cv.imshow('main1', mask)
-
-					cnts,hierarchy = cv.findContours(mask.copy(), cv.RETR_EXTERNAL,
-
-						cv.CHAIN_APPROX_SIMPLE)	
-
-					#cv.drawContours(img1,cnts,-1,(255,0,0),3,cv.LINE_AA,hierarchy,1)
-					try:
-						for el in range(len(cnts)):
-							if cv.contourArea(cnts[el]) > 300:
-								cv.drawContours(img1,cnts,el,(255,0,0),3,cv.LINE_AA,hierarchy,1)
-					except IndexError:
-						pass
-				draw()
-				cv.imshow('cntr',img1)
-				cv.imshow('countrs', image)
+				diff = img_matrix[-1]-img_matrix[0]
+				diff[diff<0] = 0
 				
+				cv.imshow('a',img_matrix[0])
+				cv.imshow('b',img_matrix[-1])
+				cv.imshow('c',diff)	 	
+			#starting photo analys
+			#res  = photo_analysis(img1)
 
-		
-        raw.truncate(0)
-		counter = 1
-		time.sleep(0.1)
+				res = 1
+
+				if res  == 1:
+
+					
+					# working with an image
+					# creating numpy masssive which takes information from blurreds
+
+					pixels1 = np.around(np.divide(diff, 0.5), decimals = 1)
+					# modifying the image
+					def draw():
+						low_white = np.array(2,np.uint8) #for rasberry use 4
+
+						max_white = np.array(10,np.uint8)
+
+						mask = cv.inRange(pixels1,(low_white), (max_white))	
+
+						cv.imshow('main1', mask)
+
+						cnts,hierarchy = cv.findContours(mask.copy(), cv.RETR_EXTERNAL,
+
+							cv.CHAIN_APPROX_SIMPLE)	
+
+						#cv.drawContours(img1,cnts,-1,(255,0,0),3,cv.LINE_AA,hierarchy,1)
+						try:
+							for el in range(len(cnts)):
+								if cv.contourArea(cnts[el]) > 300:
+									cv.drawContours(img1,cnts,el,(255,0,0),3,cv.LINE_AA,hierarchy,1)
+						except IndexError:
+							pass
+					draw()
+					cv.imshow('cntr',img1)
+					cv.imshow('countrs', image)
 					
 
-		if  not ret:
+			
+			raw.truncate(0)
+			counter = 1
+			time.sleep(0.1)
 
-			breaK
+			k = cv.waitKey(1)
 
-		k = cv.waitKey(1)
+			if k%256 == 27:
 
-		if k%256 == 27:
-
-		break
+				break
