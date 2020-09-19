@@ -65,6 +65,13 @@ remake_to_np_ms = lambda x: np.around(np.divide(x,50.0), decimals = 1)
 
 camera = PiCamera()
 camera.resolution = (640,320)
+camera.shutter_speed = 10000000
+camera.exposure_mode = 'off'
+camera.drc_strength = 'off'
+camera.sharpness = 0
+camera.contrast = 0
+camera.awb_mode = 'off'
+camera.iso = 100
 raw = PiRGBArray(camera, size = camera.resolution)
 
 
@@ -101,9 +108,10 @@ while True:
                 # creating numpy masssive which takes information from blurreds
 
                 pixels1 = np.around(np.divide(diff, 0.5), decimals = 1)
+                cv.imshow("pixels",pixels1)
                 # modifying the image
                 def draw():
-                    low_white = np.array(2,np.uint8) #for rasberry use 4
+                    low_white = np.array(4,np.uint8) #for rasberry use 4
 
                     max_white = np.array(10,np.uint8)
 
@@ -118,7 +126,7 @@ while True:
                     #cv.drawContours(img1,cnts,-1,(255,0,0),3,cv.LINE_AA,hierarchy,1)
                     try:
                         for el in range(len(cnts)):
-                            if cv.contourArea(cnts[el]) > 300:
+                            if cv.contourArea(cnts[el]) > 300 and cv.contourArea(cnts[el]) <= (640*320 / 10):
                                 cv.drawContours(img1,cnts,el,(255,0,0),3,cv.LINE_AA,hierarchy,1)
                     except IndexError:
                         pass
@@ -137,3 +145,4 @@ while True:
         if k%256 == 27:
 
             break
+
