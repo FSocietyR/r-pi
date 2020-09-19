@@ -23,7 +23,7 @@ window = cv.namedWindow("countrs")
 	# creating videocapture from main camera
 counter = 0
 
-class Camera(object):
+class Camera(PiCamera):
 
 	def __init__(self,
 
@@ -41,15 +41,11 @@ class Camera(object):
 
 						 contrast: int,
 
-						  brightness: int,
-						  
-						   resolution: str ):
+						  brightness: int):
+		
+		PiCamera.__init__(self)
 
-		self.__dict__.update(pi.__dict__)
-		
-		self.__dict__.update(pi.PiCamera.__dict__)
-		
-		self = PiCamera()
+		self.resolution = (640,480)
 
 		self.shutter_speed = shutter_speed #скорость затвора 
 
@@ -67,15 +63,15 @@ class Camera(object):
 
 		self.brightness = brightness #яркость 
 		
-		self.resolution = resolution
+		
 
 
 
 	def rawRGB(obj):
 
-		return PiRGBArray(obj, size = (640,320)) 					
+		return PiRGBArray(obj, size = (640,480)) 					
 
-camera = Camera(10000000, 30, 'night', 100,-100,-100,100,10,(640,320))
+camera = Camera(10000000, 30, 'night', 100,-100,-100,100,10)
 
 def reworking(img):
 
@@ -198,15 +194,9 @@ while True:
 
 			if res  == 1:
 
-
-
-
-
 				# working with an image
 
 				# creating numpy masssive which takes information from blurreds
-
-
 
 				pixels1 = np.around(np.divide(diff, 0.5), decimals = 1)
 
@@ -217,25 +207,11 @@ while True:
 				def draw():
 
 					low_white = np.array(4,np.uint8) #for rasberry use 4
-
-
-
 					max_white = np.array(10,np.uint8)
-
-
-
 					mask = cv.inRange(pixels1,(low_white), (max_white))	
-
-
-
 					cv.imshow('main1', mask)
 
-
-
 					cnts,hierarchy = cv.findContours(mask.copy(), cv.RETR_EXTERNAL,
-
-
-
 						cv.CHAIN_APPROX_SIMPLE)	
 
 
