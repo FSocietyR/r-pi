@@ -124,7 +124,7 @@ for frame in camera.capture_continuous(raw,format='bgr', use_video_port = True):
                 try:
                     for el in range(len(cnts)):
                         if cv.contourArea(cnts[el]) > 100 and cv.contourArea(cnts[el]) <= (640*320 / 10):
-                            if cv.arcLength(cnts[el], 1)**2 / cv.contourArea(cnts[el]) >= 60  and  10000 >= cv.arcLength(cnts[el], 1)**2 / cv.contourArea(cnts[el]):
+                            if ((cv.arcLength(cnts[el], 1)**2) / cv.contourArea(cnts[el])) >= 60  and  1000000 >= ((cv.arcLength(cnts[el], 1)**2) / cv.contourArea(cnts[el])):
                                 
                                 ((x, y), radius) = cv.minEnclosingCircle(cnts[el])
                                 M = cv.moments(cnts[el])
@@ -133,7 +133,7 @@ for frame in camera.capture_continuous(raw,format='bgr', use_video_port = True):
                                 cv.circle(img1, (int(x), int(y)), int(radius),
                                                 (l[0],l[1],l[-1]), 2)
                                 cv.circle(img1, center, 5, (0, 0, 255), -1)
-                                #cv.putText(img1, cv.contourArea(cnts[el]), ((int(M["m10"] / M["m00"])), int(M["m01"] / M["m00"])), cv.FONT_HERSHEY_SIMPLEX, (l[0],l[1],l[-1]), True)
+                                cv.putText(img1, str(cv.contourArea(cnts[el])), ((int(M["m10"] / M["m00"])), int(M["m01"] / M["m00"])), cv.FONT_HERSHEY_SIMPLEX, 0.5, (l[0],l[1],l[-1]),2)
 
                 except IndexError:
                     pass
