@@ -8,10 +8,8 @@ from time import sleep
 import picamera as pi
 from picamera import PiCamera
 from picamera.array import PiRGBArray
+from activation import start
 
-# from any_file import func()
-
-#PiCamera class
 class Camera(PiCamera):
 
         def __init__(self,
@@ -46,34 +44,29 @@ class Camera(PiCamera):
         def rawRGB(self):
                 return PiRGBArray(self, size = self.resolution)             
 
+                	
+class IMG():
+
+	def __init__(self):
+		pass
+
+	def reworking(self) -> np.array:
+		gray = cv.cvtColor(self,cv.COLOR_BGR2GRAY)
+	    blurred = cv.GaussianBlur(gray, (11,11),50)
+	    median = cv.medianBlur(blurred,5)
+	    last = np.around(np.divide(median, 50.0), decimals = 1)
+	    return last	
 
 
+def Main():
+	counter = 0
+	camera = Camera(10000000, 30, 100,-100,-100,100,10)
+	raw = camera.rawRGB()
 
-
-window = cv.namedWindow("countrs") #main_frame
-counter = 0
-camera = Camera(10000000, 30, 100,-100,-100,100,10) #creating a PiCamera object
-
-def reworking(img:list) -> np.array:
-    """
-    So, too use other fucntions and find anything 
-    in photos we need to change our main picture
-    named as img1, whic is taken from picamera      
-
-    """
-    gray = cv.cvtColor(img1,cv.COLOR_BGR2GRAY)
-    blurred = cv.GaussianBlur(gray, (11,11),50)
-    median = cv.medianBlur(blurred,5)
-    last = np.around(np.divide(median, 50.0), decimals = 1)
-    return last
-
-remake_to_np_ms = lambda x: np.around(np.divide(x,50.0), decimals = 1)
-
-raw = camera.rawRGB()
-for frame in camera.capture_continuous(raw,format='bgr', use_video_port = True):
+	for frame in camera.capture_continuous(raw,format='bgr', use_video_port = True):
     img1 = frame.array 
-    cv.imshow('rand',img1)
-    image = reworking(img1)
+    img1 = IMG()
+    image = img1.reworking()
 
     if counter == 0:
         img_matrix = []
@@ -97,8 +90,7 @@ for frame in camera.capture_continuous(raw,format='bgr', use_video_port = True):
         black_img = np.zeros((cropped_img.shape[0],cropped_img.shape[1]))
         cv.circle(black_img,(300,300),300,255,-1)
         
-        outworked_img = cv.bitwise_and(cropped_img,black_img)
-        cv.imshow('worked', outworked_img)   
+        outworked_img = cv.bitwise_and(cropped_img,black_img)   
     #starting photo analys
     #res  = photo_analysis(img1)
         res = 1
@@ -107,25 +99,27 @@ for frame in camera.capture_continuous(raw,format='bgr', use_video_port = True):
             # working with an image
             # creating numpy masssive which takes information from blurreds
             pixels1 = np.around(np.divide(outworked_img,0.5), decimals = 1)
-            cv.imshow("pixels",pixels1)
-            print(pixels1)
             # modifying the image
 
             def draw():
-
+            	"""
+            	making mask (from low_white to max_white in GRAY_COLOR)
+            	that we can easilly find which is our lamp(meteor)
+            	"""	
                 low_white = np.array(1,np.uint8) #for rasberry use 4
                 max_white = np.array(255,np.uint8)
                 mask = cv.inRange(pixels1,(low_white), (max_white)) 
-                cv.imshow('main1', mask)
-                print(mask)
                 cnts,hierarchy = cv.findContours(mask.copy(), cv.RETR_EXTERNAL,
                     cv.CHAIN_APPROX_SIMPLE) 
 
                 try:
+                	t = 0
                     for el in range(len(cnts)):
                         if cv.contourArea(cnts[el]) > 100 and cv.contourArea(cnts[el]) <= (640*320 / 10):
                             if ((cv.arcLength(cnts[el], 1)**2) / cv.contourArea(cnts[el])) >= 60  and  1000000 >= ((cv.arcLength(cnts[el], 1)**2) / cv.contourArea(cnts[el])):
-                                
+                                """
+                                need only to check if camera works correctly
+                                """
                                 ((x, y), radius) = cv.minEnclosingCircle(cnts[el])
                                 M = cv.moments(cnts[el])
                                 center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
@@ -135,17 +129,24 @@ for frame in camera.capture_continuous(raw,format='bgr', use_video_port = True):
                                 cv.circle(img1, center, 5, (0, 0, 255), -1)
                                 cv.putText(img1, str(cv.contourArea(cnts[el])), ((int(M["m10"] / M["m00"])), int(M["m01"] / M["m00"])), cv.FONT_HERSHEY_SIMPLEX, 0.5, (l[0],l[1],l[-1]),2)
 
+                                # using funtion_of_activation
+                                if t % 5 == 0:	
+                                	start()
+                                else:
+                                	pass
+                        t+= 1         		
                 except IndexError:
                     pass
 
             draw()
-            cv.imshow('cntr',img1)
-            cv.imshow('countrs', image)
 
     raw.truncate(0)
     counter = 1
-    time.sleep(0.1)
+    time.sleep(0.1
     k = cv.waitKey(1)
     if k%256 == 27:
         break
+
+Main()        
+
 
