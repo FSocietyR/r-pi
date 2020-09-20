@@ -43,106 +43,109 @@ class Camera(PiCamera):
             self.brightness = brightness #яркость
 
             
-        def rawRGB(self) -> NoneType:
-                return PiRGBArray(self, size = self.resolution)				
+        def rawRGB(self):
+                return PiRGBArray(self, size = self.resolution)             
 
 
 
-if __name__ == '__name__':
 
 
-    window = cv.namedWindow("countrs") #main_frame
-    counter = 0
-    camera = Camera(10000000, 30, 100,-100,-100,100,10) #creating a PiCamera object
+window = cv.namedWindow("countrs") #main_frame
+counter = 0
+camera = Camera(10000000, 30, 100,-100,-100,100,10) #creating a PiCamera object
 
-    def reworking(img:list) -> np.array:
-    	"""
-		So, too use other fucntions and find anything 
-		in photos we need to change our main picture
-		named as img1, whic is taken from picamera		
+def reworking(img:list) -> np.array:
+    """
+    So, too use other fucntions and find anything 
+    in photos we need to change our main picture
+    named as img1, whic is taken from picamera      
 
-    	"""
-        gray = cv.cvtColor(img1,cv.COLOR_BGR2GRAY)
-        blurred = cv.GaussianBlur(gray, (11,11),50)
-        median = cv.medianBlur(blurred,5)
-        last = np.around(np.divide(median, 50.0), decimals = 1)
-        return last
+    """
+    gray = cv.cvtColor(img1,cv.COLOR_BGR2GRAY)
+    blurred = cv.GaussianBlur(gray, (11,11),50)
+    median = cv.medianBlur(blurred,5)
+    last = np.around(np.divide(median, 50.0), decimals = 1)
+    return last
 
-    remake_to_np_ms = lambda x: np.around(np.divide(x,50.0), decimals = 1)
+remake_to_np_ms = lambda x: np.around(np.divide(x,50.0), decimals = 1)
 
-    raw = camera.rawRGB()
-    for frame in camera.capture_continuous(raw,format='bgr', use_video_port = True):
-        img1 = frame.array 
-        cv.imshow('rand',img1)
-        image = reworking(img1)
+raw = camera.rawRGB()
+for frame in camera.capture_continuous(raw,format='bgr', use_video_port = True):
+    img1 = frame.array 
+    cv.imshow('rand',img1)
+    image = reworking(img1)
 
-        if counter == 0:
-            img_matrix = []
+    if counter == 0:
+        img_matrix = []
+        img_matrix.append(image)
+
+    elif counter % 1 == 0:
+        if len(img_matrix) == 1:
             img_matrix.append(image)
 
-        elif counter % 1 == 0:
-            if len(img_matrix) == 1:
-                img_matrix.append(image)
-
-            else:
-                img_matrix[0] = img_matrix[-1]
-                img_matrix[-1] = (image)
+        else:
+            img_matrix[0] = img_matrix[-1]
+            img_matrix[-1] = (image)
 
 
+    
+        diff = img_matrix[-1]-img_matrix[0]
+        diff[diff<=0] = 0
+        
+        cropped_img = diff[100:1700, 400:1000]
+        
+        black_img = np.zeros((cropped_img.shape[0],cropped_img.shape[1]))
+        cv.circle(black_img,(300,300),300,255,-1)
+        
+        outworked_img = cv.bitwise_and(cropped_img,black_img)
+        cv.imshow('worked', outworked_img)   
+    #starting photo analys
+    #res  = photo_analysis(img1)
+        res = 1
+        if res  == 1:
 
-            diff = img_matrix[-1]-img_matrix[0]
-            diff[diff<0] = 0
+            # working with an image
+            # creating numpy masssive which takes information from blurreds
+            pixels1 = np.around(np.divide(outworked_img,0.5), decimals = 1)
+            cv.imshow("pixels",pixels1)
+            print(pixels1)
+            # modifying the image
 
+            def draw():
 
+                low_white = np.array(1,np.uint8) #for rasberry use 4
+                max_white = np.array(255,np.uint8)
+                mask = cv.inRange(pixels1,(low_white), (max_white)) 
+                cv.imshow('main1', mask)
+                print(mask)
+                cnts,hierarchy = cv.findContours(mask.copy(), cv.RETR_EXTERNAL,
+                    cv.CHAIN_APPROX_SIMPLE) 
 
-            cv.imshow('a',img_matrix[0])
-            cv.imshow('b',img_matrix[-1])
-            cv.imshow('c',diff)	 	
+                try:
+                    for el in range(len(cnts)):
+                        if cv.contourArea(cnts[el]) > 100 and cv.contourArea(cnts[el]) <= (640*320 / 10):
+                            if cv.arcLength(cnts[el], 1)**2 / cv.contourArea(cnts[el]) >= 60  and  10000 >= cv.arcLength(cnts[el], 1)**2 / cv.contourArea(cnts[el]):
+                                
+                                ((x, y), radius) = cv.minEnclosingCircle(cnts[el])
+                                M = cv.moments(cnts[el])
+                                center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
+                                l = [ (lambda i: random.randrange(0,256))(i) for i in range(3)]
+                                cv.circle(img1, (int(x), int(y)), int(radius),
+                                                (l[0],l[1],l[-1]), 2)
+                                cv.circle(img1, center, 5, (0, 0, 255), -1)
+                                #cv.putText(img1, cv.contourArea(cnts[el]), ((int(M["m10"] / M["m00"])), int(M["m01"] / M["m00"])), cv.FONT_HERSHEY_SIMPLEX, (l[0],l[1],l[-1]), True)
 
-        #starting photo analys
-        #res  = photo_analysis(img1)
-            res = 1
-            if res  == 1:
+                except IndexError:
+                    pass
 
-                # working with an image
-                # creating numpy masssive which takes information from blurreds
-                pixels1 = np.around(np.divide(diff, 0.1), decimals = 1)
-                cv.imshow("pixels",pixels1)
-                # modifying the image
+            draw()
+            cv.imshow('cntr',img1)
+            cv.imshow('countrs', image)
 
-                def draw():
+    raw.truncate(0)
+    counter = 1
+    time.sleep(0.1)
+    k = cv.waitKey(1)
+    if k%256 == 27:
+        break
 
-                    low_white = np.array(4,np.uint8) #for rasberry use 4
-                    max_white = np.array(10,np.uint8)
-                    mask = cv.inRange(pixels1,(low_white), (max_white))	
-                    cv.imshow('main1', mask)
-                    cnts,hierarchy = cv.findContours(mask.copy(), cv.RETR_EXTERNAL,
-                        cv.CHAIN_APPROX_SIMPLE)	
-
-                    try:
-                        for el in range(len(cnts)):
-                            if cv.contourArea(cnts[el]) > 300 and cv.contourArea(cnts[el]) <= (640*320 / 10):
-                                if cv.arcLength((cnts[el])**2 / cv.contourArea(cnts[el]))>= 60 and 300 >= cv.arcLength(cnts[el])**2 / cv.contourArea(cnts[el]):
-                                    
-                                    ((x, y), radius) = cv.minEnclosingCircle(cnts[el])
-                                    M = cv.moments(cnts[el])
-                                    center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
-                                    l = [ (lambda i: random.randrange(0,256))(i) for i in range(3)]
-                                    cv.circle(img1, (int(x), int(y)), int(radius),
-                                                    (l[0],l[1],l[-1]), 2)
-                                    cv.circle(img1, center, 5, (0, 0, 255), -1)
-                                    cv.putText(img1, cv.contourArea(cnts[el]), (int(x), int(y)), cv.FONT_HERSHEY_SIMPLEX, (l[0],l[1],l[-1]), 2)
-
-                    except IndexError:
-                        pass
-
-                draw()
-                cv.imshow('cntr',img1)
-                cv.imshow('countrs', image)
-
-        raw.truncate(0)
-        counter = 1
-        time.sleep(0.1)
-        k = cv.waitKey(1)
-        if k%256 == 27:
-            break
