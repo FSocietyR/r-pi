@@ -10,7 +10,8 @@ from picamera import PiCamera
 from picamera.array import PiRGBArray
 from activation import start
 from datetime import datetime
-# from any_file import func()
+from rasberry_pi_bot import upload
+import os
 
 #PiCamera class
 class Camera(PiCamera):
@@ -52,6 +53,12 @@ def taking_photo(img):
     img_name = datetime.now(tz = None)
     img_name = str(str(img_name.year) + '-' + str(img_name.month) + '-' + str(img_name.day) + '-' + str(img_name.hour) + '-'+str(img_name.minute)+'-'+str(img_name.second)+ '.jpg')
     cv.imwrite(img_name, img)
+    upload(img_name)
+
+    if os.path.exists(img_name):
+    	with open(img_name) as file:
+    		os.remove(file)
+
 
 
 counter = 0
