@@ -12,6 +12,7 @@ from activation import start
 from datetime import datetime
 from rasberry_pi_bot import upload
 import os
+# from any_file import func()
 
 #PiCamera class
 class Camera(PiCamera):
@@ -48,22 +49,20 @@ class Camera(PiCamera):
         def rawRGB(self):
                 return PiRGBArray(self, size = self.resolution)             
 
-
+def delete_file(file):
+    
+    if os.path.exists(file):
+        os.remove(file)
+    		
 def taking_photo(img):
     img_name = datetime.now(tz = None)
     img_name = str(str(img_name.year) + '-' + str(img_name.month) + '-' + str(img_name.day) + '-' + str(img_name.hour) + '-'+str(img_name.minute)+'-'+str(img_name.second)+ '.jpg')
     cv.imwrite(img_name, img)
     upload(img_name)
-
-    if os.path.exists(img_name):
-    	with open(img_name) as file:
-    		os.remove(file)
-
-
-
-counter = 0
-camera = Camera(10000000, 30, 100,-100,-100,100,10) #creating a PiCamera object
-
+    
+    delete_file(img_name)
+    
+    		
 def reworking(img:list) -> np.array:
     """
     So, too use other fucntions and find anything 
@@ -78,83 +77,96 @@ def reworking(img:list) -> np.array:
     return last
 
 #remake_to_np_ms = lambda x: np.around(np.divide(x,50.0), decimals = 1)
+def Main():
+    counter = 0
+    camera = Camera(10000000, 30, 100,-100,-100,100,10) #creating a PiCamera object
+    raw = camera.rawRGB()
+    for frame in camera.capture_continuous(raw,format='bgr', use_video_port = True):
+        img1 = frame.array
+        image = reworking(img1)
 
-raw = camera.rawRGB()
-for frame in camera.capture_continuous(raw,format='bgr', use_video_port = True):
-    img1 = frame.array
-    image = reworking(img1)
-
-    if counter == 0:
-        img_matrix = []
-        img_matrix.append(image)
-
-    elif counter % 1 == 0:
-        if len(img_matrix) == 1:
+        if counter == 0:
+            img_matrix = []
             img_matrix.append(image)
 
-        else:
-            img_matrix[0] = img_matrix[-1]
-            img_matrix[-1] = (image)
+        elif counter % 1 == 0:
+            if len(img_matrix) == 1:
+                img_matrix.append(image)
+
+            else:
+                img_matrix[0] = img_matrix[-1]
+                img_matrix[-1] = (image)
 
 
-    
-        diff = img_matrix[-1]-img_matrix[0]
-        diff[diff<=0] = 0
         
-        cropped_img = diff[100:1700, 400:1000]
-        
-        black_img = np.zeros((cropped_img.shape[0],cropped_img.shape[1]))
-        cv.circle(black_img,(300,300),300,255,-1)
-        
-        outworked_img = cv.bitwise_and(cropped_img,black_img)
-        #starting photo analys
-    #res  = photo_analysis(img1)
-        res = 1
-        if res  == 1:
+            diff = img_matrix[-1]-img_matrix[0]
+            diff[diff<=0] = 0
+            
+            cropped_img = diff[100:1700, 400:1000]
+            
+            black_img = np.zeros((cropped_img.shape[0],cropped_img.shape[1]))
+            cv.circle(black_img,(300,300),300,255,-1)
+            
+            outworked_img = cv.bitwise_and(cropped_img,black_img)
+            #starting photo analys
+        #res  = photo_analysis(img1)
+            res = 1
+            if res  == 1:
 
-            # working with an image
-            # creating numpy masssive which takes information from blurreds
-            pixels1 = np.around(np.divide(outworked_img,0.5), decimals = 1)
-            # modifying the image
+                # working with an image
+                # creating numpy masssive which takes information from blurreds
+                pixels1 = np.around(np.divide(outworked_img,0.5), decimals = 1)
+                # modifying the image
 
-            def draw():
+                def draw():
 
-                low_white = np.array(1,np.uint8) #for rasberry use 4
-                max_white = np.array(255,np.uint8)
-                mask = cv.inRange(pixels1,(low_white), (max_white)) 
-                cnts,hierarchy = cv.findContours(mask.copy(), cv.RETR_EXTERNAL,
-                    cv.CHAIN_APPROX_SIMPLE) 
+                    low_white = np.array(1,np.uint8) #for rasberry use 4
+                    max_white = np.array(255,np.uint8)
+                    mask = cv.inRange(pixels1,(low_white), (max_white)) 
+                    cnts,hierarchy = cv.findContours(mask.copy(), cv.RETR_EXTERNAL,
+                        cv.CHAIN_APPROX_SIMPLE) 
 
-                try:
-                    t = 0
-                    for el in range(len(cnts)):        
-                        if cv.contourArea(cnts[el]) > 100 and cv.contourArea(cnts[el]) <= (640*320 / 10):
-                            if ((cv.arcLength(cnts[el], 1)**2) / cv.contourArea(cnts[el])) >= 0 and  3234234234 >= cv.arcLength(cnts[el], 1)**2 / cv.contourArea(cnts[el]):
+                    try:
+                        t = 0
+                        for el in range(len(cnts)):        
+                            if cv.contourArea(cnts[el]) > 100 and cv.contourArea(cnts[el]) <= (640*320 / 10):
+                                if ((cv.arcLength(cnts[el], 1)**2) / cv.contourArea(cnts[el])) >= 0 and  3234234234 >= cv.arcLength(cnts[el], 1)**2 / cv.contourArea(cnts[el]):
+                                    
+                                    ((x, y), radius) = cv.minEnclosingCircle(cnts[el])
+                                    l = [ (lambda i: random.randrange(0,256))(i) for i in range(3)]
+                                    M = cv.moments(cnts[el])
                                 
-                                ((x, y), radius) = cv.minEnclosingCircle(cnts[el])
-                                l = [ (lambda i: random.randrange(0,256))(i) for i in range(3)]
-                                M = cv.moments(cnts[el])
-                            
-                                center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
-                                
-                                cv.circle(outworked_img, (int(x), int(y)), int(radius),
-                                                (l[0],l[1],l[-1]), 2)
-                                cv.circle(img1, center, 5, (0, 0, 255), -1)
-                                cv.putText(outworked_img, str(((cv.arcLength(cnts[el], 1)**2) / cv.contourArea(cnts[el]))), ((int(M["m10"] / M["m00"])), int(M["m01"] / M["m00"])), cv.FONT_HERSHEY_SIMPLEX, 0.5, (l[0],l[1],l[-1]),2)
-                                taking_photo(outworked_img)
-                                if t % 5 == 0:
-                                    start()
-                    t+=1            
-                except IndexError:
-                    pass
+                                    center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
+                                    
+                                    cv.circle(mask, (int(x), int(y)), int(radius),
+                                                    (l[0],l[1],l[-1]), 2)
+                                    cv.circle(mask, center, 5, (0, 0, 255), -1)
+                                    cv.putText(mask, str(((cv.arcLength(cnts[el], 1)**2) / cv.contourArea(cnts[el]))), ((int(M["m10"] / M["m00"])), int(M["m01"] / M["m00"])), cv.FONT_HERSHEY_SIMPLEX, 0.5, (l[0],l[1],l[-1]),2)
+                                    #cv.imshow('reworked', mask) 
+                                    if t % 5 == 0:
+                                        img_name = datetime.now(tz = None)
+                                        print('image {} has been sent'.format(str(str(img_name.year) + '-' + str(img_name.month) + '-' + str(img_name.day) + '-' + str(img_name.hour) + '-'+str(img_name.minute)+'-'+str(img_name.second)+ '.jpg')))
+                                        taking_photo(mask)
+                                        start()
+                                        for i in range(30):
+                                            print('waiting: {}'.format(i))
+                                            time.sleep(1)    
+                                        
+                                      #start()
+                        t+=1            
+                    except IndexError:
+                        pass
 
-            draw()
-            cv.imshow("visualization",img1)
-            cv.imshow('reworked', outworked_img)
-    raw.truncate(0)
-    counter = 1
-    time.sleep(0.1)
-    k = cv.waitKey(1)
-    if k%256 == 27:
-        break
-
+                draw()
+                #cv.imshow("visualization",img1)
+                
+        delete_file('activation.pyc')
+        raw.truncate(0)
+        counter = 1
+        time.sleep(0.1)
+        k = cv.waitKey(1)
+        if k%256 == 27:
+            break
+        
+if __name__ == "__main__":
+    Main()
