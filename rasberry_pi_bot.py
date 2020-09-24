@@ -32,5 +32,3 @@ def upload(file):
 	res = DRIVE.files().create(body=metadata, media_body=file_name).execute()
 	if res:
 		print('Uploaded: {}'.format(file))
-                
-
