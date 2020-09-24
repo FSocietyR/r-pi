@@ -1,6 +1,6 @@
 from socket import *
 import os 
-def start():
+def start(name):
 	sock = socket()
 	flag = True
 	sock.connect(('192.168.1.139', 1024))
@@ -8,12 +8,12 @@ def start():
             try:
                 letter = 'start'.encode('utf-8')
                 data = sock.sendto(letter, ('192.168.1.139', 1024))
+                print('image: {}...Send'.format(name))
             except TimeoutError:
-                while not True:
-                    letter = 'start'.encode('utf-8')
-                    data = sock.sendto(letter, ('192.168.1.139', 1024))
+                print('image: {} was not received \n the server closed the connection'.format(name))
             """conn= sock.recv(1024)
             r_data = os.system(conn.decode('utf-8'))
             if r_data == 'finish':
                 print('image has been received')"""
             flag = False
+
